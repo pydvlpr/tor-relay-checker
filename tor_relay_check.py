@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import ipaddress
+from datetime import date,timedelta
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver import FirefoxOptions
@@ -22,6 +23,7 @@ class TorRelayChecker(object):
     __webdriverpath = None
     __driver = None
     __relay_details = None
+    __exonerator_details = None
 
     def __init__(self,ipaddr=None):
         """ Initializtion of Tor Relay Checker"""
@@ -72,6 +74,11 @@ class TorRelayChecker(object):
 
         return self.__relay_details
 
+    def get_exonerator_details(self):
+        """ Returns details of exonerator request """
+        
+        return self.__exonerator_details
+
     def __request_tor_metrics_website(self, url, ipaddr):
         """ Request information of ip-address at Tor Metrics Website """
 
@@ -94,7 +101,7 @@ class TorRelayChecker(object):
         self.__driver.quit()
         return result
     
-    def __parse_tor_metrics_website_content(self, content):
+    def __check_tor_metrics_website_content(self, content):
         """ Parse the content of request to Tor Metric Website """
 
         if "No Results found!" in content:
@@ -102,15 +109,48 @@ class TorRelayChecker(object):
         else:
             return True
 
-    def run(self):
+    def request_exonerator(self,ipaddr,reqdate):
+        """ Request information of ip-address from Exonerator website"""
+
+        self.__exonerator_details = ""
+        url = f"https://metrics.torproject.org/exonerator.html?ip={ipaddr}&timestamp={reqdate}&lang=en"
+        self.__driver.get(url)
+        
+        content = self.__driver.find_element_by_xpath(
+            '//*[@id="wrapper"]/div[6]/div[2]/div/div/div[1]')
+        
+        if "Result is positive" in content.text:
+            print("Exonerator: True")
+            content = self.__driver.find_element_by_xpath(
+                '//*[@id="wrapper"]/div[6]/div[3]')
+            self.__exonerator_details = content.text
+
+        elif "Date parameter too recent" in content.text:
+            print("Exonerator: Unknown")
+            print("Date is too recent.")
+
+        elif "Result is negative" in content.text:
+            print("Exonerator: False")
+    
+        else:
+            print("Something unknown happend.")
+
+    def test_run(self):
         """ Let the Tor Relay Checker work. """
 
         print()
+        print(f"Checking ip-address {self.__ipaddr}")
+        reqdate = (date.today()-timedelta(days=3)).isoformat()
+        self.__init_webscraper(self.__webdriver)
+        self.request_exonerator(self.__ipaddr,reqdate)
+        if self.__exonerator_details != "":
+            print(self.__exonerator_details)
+            print()
+
         self.__init_webscraper(self.__webdriver)
         content = self.__request_tor_metrics_website(self.__url_tormetrics,self.__ipaddr)
-        print(f"Checking ip-address {self.__ipaddr}")
-        check = self.__parse_tor_metrics_website_content(content)
-        print("Result: ", check)
+        check = self.__check_tor_metrics_website_content(content)
+        print("Tor Metric: ", check)
         if check:
             print(self.get_relay_details())
 
@@ -121,19 +161,20 @@ if __name__ == '__main__':
     trc = TorRelayChecker()
     # tor ipv4
     trc.set_ip("89.234.157.254")
-    trc.run()
+    trc.test_run()
     # no relay ipv4
     trc.set_ip("89.234.157.249")
-    trc.run()
+    trc.test_run()
     # tor relay ipv6 short
     trc.set_ip("2a0b:f4c1:2::252")
-    trc.run()
+    trc.test_run()
     # tor relay ipv6 long
     trc.set_ip("2a0b:f4c1:0002:0000:0000:0000:0000:0253")
-    trc.run()
+    trc.test_run()
     #no tor relay ipv6 long
     trc.set_ip("2a0b:f4c1:0002:0000:0000:0000:0000:0123")
-    trc.run()
+    trc.test_run()
 
+    # tor ipv4
     trc2 = TorRelayChecker("89.234.157.254")
-    trc2.run()
+    trc2.test_run()
