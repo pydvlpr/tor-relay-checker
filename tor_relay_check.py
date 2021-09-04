@@ -1,10 +1,12 @@
 #!/bin/env python3
 
+import os
 import sys
 import time
 import ipaddress
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
+from selenium.webdriver import FirefoxOptions
 from selenium.common.exceptions import NoSuchElementException
 
 
@@ -16,18 +18,39 @@ class TorRelayChecker(object):
 
     __url_tormetrics = "https://metrics.torproject.org/rs.html#search/"
     __ipaddr = None
-    __driverpath = "/usr/bin/chromedriver"
+    __webdriver = None
+    __webdriverpath = None
     __driver = None
 
     def __init__(self):
-        self.__setup_webscraper()
+        self.__setup_webdriver()
 
-    def __setup_webscraper(self):
+    def __setup_webdriver(self):
+        
+        if os.path.exists("/usr/bin/chromedriver2"):
+            self.__webdriverpath = "/usr/bin/chromedriver"
+            print("Using chromedriver")
+            self.__init_webscraper("chrome")
+        elif os.path.exists("/usr/bin/geckodriver"):
+            self.__webdriverpath = "/usr/bin/geckodriver"
+            print("Using geckodriver")
+            self.__init_webscraper("gecko")
+        else:
+            print("Please install Chrome with chromedriver or Firefox and geckodriver")
+            sys.exit(2)
+
+
+    def __init_webscraper(self,browser):
         """ Setup the webscraping for javascript websites """
 
-        options = ChromeOptions()
-        options.add_argument('--headless')
-        self.__driver = webdriver.Chrome(self.__driverpath, options=options)
+        if browser == "chrome":
+            options = ChromeOptions()
+            options.add_argument('--headless')
+            self.__driver = webdriver.Chrome(self.__webdriverpath, options=options)
+        if browser == "gecko":
+            options = FirefoxOptions()
+            options.add_argument('--headless')
+            self.__driver = webdriver.Firefox(options=options)
 
     def set_ip(self, ipaddr):
         """ set ip-address to request """
@@ -37,6 +60,7 @@ class TorRelayChecker(object):
 
     def __request_tor_metrics_website(self, url, ipaddr):
         """ Request information of ip-address at Tor Metrics Website """
+
         content = None
 
         try:
@@ -64,13 +88,11 @@ class TorRelayChecker(object):
     def run(self):
         """ Let the Tor Relay Checker work. """
 
-        self.__setup_webscraper()
-        content = self.__request_tor_metrics_website(
-            self.__url_tormetrics, self.__ipaddr)
+        self.__init_webscraper(self.__webdriver)
+        content = self.__request_tor_metrics_website(self.__url_tormetrics, self.__ipaddr)
         print(f"Checking ip-address {self.__ipaddr}")
         check = self.__parse_tor_metrics_website_content(content)
         print("Result: ", check)
-
 
 if __name__ == '__main__':
 
