@@ -109,7 +109,7 @@ class TorRelayChecker(object):
         else:
             return True
 
-    def request_exonerator(self,ipaddr,reqdate):
+    def __request_exonerator(self,ipaddr,reqdate):
         """ Request information of ip-address from Exonerator website"""
 
         self.__exonerator_details = ""
@@ -135,6 +135,35 @@ class TorRelayChecker(object):
         else:
             print("Something unknown happend.")
 
+    def request_tor_metric(self):
+        """ Request information from tor metrics """
+
+        self.__init_webscraper(self.__webdriver)
+        content = self.__request_tor_metrics_website(
+            self.__url_tormetrics, self.__ipaddr)
+        check = self.__check_tor_metrics_website_content(content)
+        if check:
+            result =  self.get_relay_details()
+        else:
+            result = ""
+        return result
+
+
+    def request_exonerator(self,reqdate):
+        """ Request information from exonerator """
+
+        self.__init_webscraper(self.__webdriver)
+        self.__request_exonerator(self.__ipaddr, reqdate)
+        return self.__exonerator_details
+
+    def request_tor_status(self,reqdate):
+        """ Run request from exonerator and tor metric informations """
+
+        exo_result = self.request_exonerator(reqdate)
+        metric_result = self.request_tor_metric()
+        result = "\n".join(["Exonerator:",exo_result,"","Tor-Relay-Metric",metric_result])
+        return result
+
     def test_run(self):
         """ Let the Tor Relay Checker work. """
 
@@ -142,7 +171,7 @@ class TorRelayChecker(object):
         print(f"Checking ip-address {self.__ipaddr}")
         reqdate = (date.today()-timedelta(days=3)).isoformat()
         self.__init_webscraper(self.__webdriver)
-        self.request_exonerator(self.__ipaddr,reqdate)
+        self.__request_exonerator(self.__ipaddr,reqdate)
         if self.__exonerator_details != "":
             print(self.__exonerator_details)
             print()
@@ -154,6 +183,13 @@ class TorRelayChecker(object):
         if check:
             print(self.get_relay_details())
 
+    def public_test_run(self):
+        """ Lets test the public request methods """
+
+        reqdate = (date.today()-timedelta(days=3)).isoformat()
+        result = self.request_tor_status(reqdate)
+        print(result)
+
 
 if __name__ == '__main__':
     """ Some tests"""
@@ -162,6 +198,8 @@ if __name__ == '__main__':
     # tor ipv4
     trc.set_ip("89.234.157.254")
     trc.test_run()
+    #trc.public_test_run()
+
     # no relay ipv4
     trc.set_ip("89.234.157.249")
     trc.test_run()
