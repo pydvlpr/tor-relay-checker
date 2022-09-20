@@ -66,8 +66,13 @@ class TorRelayChecker(object):
     def set_ip(self, ipaddr):
         """ set ip-address to request """
 
-        ipaddr = str(ipaddress.ip_address(ipaddr))
-        self.__ipaddr = ipaddr
+        try:
+          ipaddr = str(ipaddress.ip_address(ipaddr))
+          self.__ipaddr = ipaddr
+        except ValueError as e:
+          self.__ipaddr = None
+          sys.exit(f"No valid ip address:{ipaddr}")
+
 
     def get_relay_details(self):
         """ Returns details of requested tor relay"""
@@ -87,12 +92,10 @@ class TorRelayChecker(object):
         try:
             self.__driver.get(url+ipaddr)
             time.sleep(2)
-            content = self.__driver.find_element_by_xpath(
-                '//*[@id="content"]/div/div/strong')
+            content = self.__driver.find_element("xpath",'//*[@id="content"]/div/div/strong')
             result = content.text
         except NoSuchElementException as e:
-            content = self.__driver.find_element_by_xpath(
-                '// *[@id="torstatus_results"]')
+            content = self.__driver.find_element("xpath",'// *[@id="torstatus_results"]')
             result = content.text
             self.__relay_details = result
         except Exception as e:
@@ -116,9 +119,8 @@ class TorRelayChecker(object):
         url = f"https://metrics.torproject.org/exonerator.html?ip={ipaddr}&timestamp={reqdate}&lang=en"
         self.__driver.get(url)
 
-        def read_posneg_result_from_html_dom():        
-          content = self.__driver.find_element_by_xpath(
-              '//*[@id="wrapper"]/div[5]/div[2]/div/div/div[1]/h3')
+        def read_posneg_result_from_html_dom():
+          content = self.__driver.find_element("xpath",'//*[@id="wrapper"]/div[5]/div[2]/div/div/div[1]/h3')
           return content
 
         content = read_posneg_result_from_html_dom()
@@ -126,21 +128,20 @@ class TorRelayChecker(object):
         def get_details_if_positiv(content):
           if "Result is positive" in content.text:
               print("Exonerator: True")
-              content = self.__driver.find_element_by_xpath(
-                  '//*[@id="wrapper"]/div[5]/div[3]')
+              content = self.__driver.find_element("xpath",'//*[@id="wrapper"]/div[5]/div[3]')
 
               self.__exonerator_details = content.text
 
           elif "Date parameter too recent" in content.text:
               print("Exonerator: Unknown")
               print("Date is too recent.")
-  
+
           elif "Result is negative" in content.text:
               print("Exonerator: False")
-  
+
           else:
               print("Something unknown happend.")
-        
+
         get_details_if_positiv(content)
 
     def request_tor_metric(self):
