@@ -34,21 +34,31 @@ class TorRelayChecker(object):
     def __setup_webdriver(self):
         """ Testing and setup available webdriver """
 
-        if os.path.exists("/usr/bin/chromedriver"):
-            self.__webdriver = "chrome"
-            self.__webdriverpath = "/usr/bin/chromedriver"
-            print("Using chromedriver")
-            self.__init_webscraper("chrome")
+        try:
+            if os.path.exists("/usr/bin/chromedriver"):
+                self.__webdriver = "chrome"
+                self.__webdriverpath = "/usr/bin/chromedriver"
+                print("Using chromedriver")
+                self.__init_webscraper("chrome")
+        
+            elif os.path.exists("/opt/homebrew/bin/chromedriver"):
+                self.__webdriver = "chrome"
+                self.__webdriverpath = "/opt/homebrew/bin/chromedriver"
+                print("Using chromedriver by homebrew")       
+        except:
+            if os.path.exists("/usr/bin/geckodriver"):
+                self.__webdriver = "gecko"
+                self.__webdriverpath = "/usr/bin/geckodriver"
+                print("Using geckodriver")
+                self.__init_webscraper("gecko")
 
-        elif os.path.exists("/usr/bin/geckodriver"):
-            self.__webdriver = "gecko"
-            self.__webdriverpath = "/usr/bin/geckodriver"
-            print("Using geckodriver")
-            self.__init_webscraper("gecko")
-
-        else:
-            print("Please install Chrome with chromedriver or Firefox and geckodriver")
-            sys.exit(2)
+            elif os.path.exists("/opt/homebrew/bin/geckodriver"):
+                self.__webdriver = "chrome"
+                self.__webdriverpath = "/opt/homebrew/bin/geckodriver"
+                print("Using geckodriver by homebrew")
+            else:
+                print("Please install Chrome with chromedriver or Firefox and geckodriver")
+                sys.exit(2)
 
     def __init_webscraper(self,browser):
         """ Setup the webscraping for javascript websites """
@@ -71,7 +81,8 @@ class TorRelayChecker(object):
           self.__ipaddr = ipaddr
         except ValueError as e:
           self.__ipaddr = None
-          sys.exit(f"No valid ip address:{ipaddr}")
+          print(f"Error: {e}")
+          sys.exit(f"No valid ip address: {ipaddr}")
 
 
     def get_relay_details(self):
