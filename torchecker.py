@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
   srcfile = sys.argv[1]
   reqdate = sys.argv[2]
-  print(f"Check list <{srcfile}< for date <{reqdate}>")
+  print(f"Check list <{srcfile}> for date <{reqdate}>")
 
   iplist = None
   with open(srcfile, 'r') as file:
