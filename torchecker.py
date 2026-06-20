@@ -32,7 +32,6 @@ if __name__ == '__main__':
     ip_set = set(iplist)
     ip_list = (list(ip_set))
 
-    #trs = TorRelayChecker()
     print()
     for ip in ip_list:
       print(ip,end=" ")
