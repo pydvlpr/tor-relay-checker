@@ -10,7 +10,6 @@ from selenium.webdriver import ChromeOptions
 from selenium.webdriver import FirefoxOptions
 from selenium.common.exceptions import NoSuchElementException
 
-
 class TorRelayChecker(object):
     """
         Class handles request to the Tor Metrics Website to check
@@ -24,41 +23,50 @@ class TorRelayChecker(object):
     __driver = None
     __relay_details = None
     __exonerator_details = None
+    __debug = False
 
     def __init__(self,ipaddr=None):
         """ Initializtion of Tor Relay Checker"""
-
+        if len(sys.argv) == 4:
+            if sys.argv[3] == "-d":
+                self.__debug = True
         self.__ipaddr = ipaddr
         self.__setup_webdriver()
 
+    def log(self,msg):
+        if self.__debug:
+            print(msg)
+
     def __setup_webdriver(self):
-        """ Testing and setup available webdriver """
+        """ Testing and setup available webdriver """    
+        #try:
+        if os.path.exists("/usr/bin/chromedriver"):
+            self.log("Chromedriver found")
+            self.__webdriver = "chrome"
+            self.__webdriverpath = "/usr/bin/chromedriver"
+            self.log("Using Chromedriver")
+            self.__init_webscraper("chrome")
+        elif os.path.exists("/opt/homebrew/bin/chromedriver"):
+            print("Homebrew Chromedriver found")
+            self.__webdriver = "chrome"
+            self.__webdriverpath = "/opt/homebrew/bin/chromedriver"
+            self.log("Using chromedriver by homebrew")       
+        else:
+            self.log("No chromedriver found")
+        #except:
+        if os.path.exists("/usr/local/bin/geckodriver"):
+            self.__webdriver = "gecko"
+            self.__webdriverpath = "/usr/local/bin/geckodriver"
+            self.log("Using Geckodriver")
+            self.__init_webscraper("gecko")
 
-        try:
-            if os.path.exists("/usr/bin/chromedriver"):
-                self.__webdriver = "chrome"
-                self.__webdriverpath = "/usr/bin/chromedriver"
-                print("Using chromedriver")
-                self.__init_webscraper("chrome")
-        
-            elif os.path.exists("/opt/homebrew/bin/chromedriver"):
-                self.__webdriver = "chrome"
-                self.__webdriverpath = "/opt/homebrew/bin/chromedriver"
-                print("Using chromedriver by homebrew")       
-        except:
-            if os.path.exists("/usr/bin/geckodriver"):
-                self.__webdriver = "gecko"
-                self.__webdriverpath = "/usr/bin/geckodriver"
-                print("Using geckodriver")
-                self.__init_webscraper("gecko")
-
-            elif os.path.exists("/opt/homebrew/bin/geckodriver"):
-                self.__webdriver = "chrome"
-                self.__webdriverpath = "/opt/homebrew/bin/geckodriver"
-                print("Using geckodriver by homebrew")
-            else:
-                print("Please install Chrome with chromedriver or Firefox and geckodriver")
-                sys.exit(2)
+        elif os.path.exists("/opt/homebrew/bin/geckodriver"):
+            self.__webdriver = "chrome"
+            self.__webdriverpath = "/opt/homebrew/bin/geckodriver"
+            self.log("Using Geckodriver by homebrew")
+        else:
+            print("Please install Chrome with chromedriver or Firefox and geckodriver")
+            sys.exit(2)
 
     def __init_webscraper(self,browser):
         """ Setup the webscraping for javascript websites """
