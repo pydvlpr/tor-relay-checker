@@ -8,6 +8,16 @@ It is possible to request the (Exonerator)[https://metrics.torproject.org/exoner
 
 Also the request for information to the (Relay Search)[https://metrics.torproject.org/rs.html] is possible. There you get several technical information about the tor-node.
 
+## Requirements
+
+Chromedriver or Geckodriver needed. Both can be installed native or via brew on MacOS.
+Chromedrive has to match installed Chrome version.
+
+Further information:
+
+Chromedriver: https://developer.chrome.com/docs/chromedriver/
+Geckodriver: https://github.com/mozilla/geckodriver/releases
+
 ## Installation
 
 Clone the repository.
@@ -24,7 +34,7 @@ Change into repository directory. Use `pipenv` to install dependencies.
 
 ## Usage
 
-There is the example program `torchecker.py`. It needs a list of ip-addresses and a date to check.
+There is the example program `torchecker.py`. It needs a list of ip-addresses/one ip address and a date to check.
 
 ```
 %> ./torchecker.py sample.list 2023-01-01                                                     
@@ -35,6 +45,10 @@ Using chromedriver by homebrew
 89.234.157.254 Exonerator: True
 2a0b:f4c1:2::252 Exonerator: True
 ...
+
+%> ./torchecker.py 89.234.157.254 2026-06-10
+Check list <89.234.157.254> for date <2026-06-10>
+Exonerator: True
 ```
 
 The module `tor_relay_check.py` contains several test-cases. They are automatically run by execution of the library as a program.
