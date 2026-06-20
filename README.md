@@ -16,6 +16,7 @@ Chromedrive has to match installed Chrome version.
 Further information:
 
 Chromedriver: https://developer.chrome.com/docs/chromedriver/
+
 Geckodriver: https://github.com/mozilla/geckodriver/releases
 
 ## Installation
